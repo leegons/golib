@@ -3,6 +3,7 @@ package golib
 import (
 	"bufio"
 	"bytes"
+	"encoding/csv"
 	"io"
 	"os"
 	"strings"
@@ -75,4 +76,27 @@ func ReadAllLineSplit(filename string, sep string, expectCol int) ([][]string, e
 		return nil
 	})
 	return results, err
+}
+
+func CsvReadAll(filename string, callback func([]string) error) error {
+	fd, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+
+	reader := csv.NewReader(fd)
+	for {
+		line, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		if err = callback(line); err != nil {
+			return err
+		}
+	}
+	return nil
 }
